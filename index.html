@@ -250,11 +250,12 @@
     }
 
 
-    /* Section Separator */
+    /* Section Separator - AMÉLIORÉ pour être plus visible */
     .section-divider {
       margin-bottom: 30px; /* Space below the section */
       padding-bottom: 20px; /* Padding above the line */
-      border-bottom: 1px solid #e9ecef; /* Light grey line */
+      border-bottom: 2px solid #ced4da; /* Plus épais et légèrement plus foncé */
+      opacity: 0.7; /* Légèrement transparent pour ne pas être trop agressif */
     }
 
     /* Jira Output Area */
@@ -383,7 +384,7 @@
         <textarea id="seoMods" rows="6"></textarea>
 
         <div class="section-divider"></div> <div class="section-content">
-            <h2>Mots clés et Localités</h2>
+            <h2>&nbsp;Mots clés et Localités</h2>
 
             <div class="sub-section-title">HP(Home Page) / LP (Landing Pages)</div>
             <table id="lpMappingTable">
@@ -396,7 +397,7 @@
                   <th>Commentaires</th>
                   <th>Actions</th>
                 </tr>
-    </thead>
+              </thead>
               <tbody>
                 <tr>
                   <td><textarea rows="1"></textarea></td>
@@ -434,11 +435,18 @@
               </tbody>
             </table>
             <button onclick="addRow('localesMappingTable')">Ajouter ligne Localité</button>
-        </div>
+
+            <label for="globalMods">Modifs s'appliquant à toutes les pages :</label>
+            <select id="globalMods">
+              <option value="" selected>-- Sélectionner --</option>
+              <option value="OUI">OUI</option>
+              <option value="NON">NON</option>
+            </select>
+            </div>
         <div class="section-divider"></div> <div class="section-title">Modifications souhaitées côté SEA/SMO :</div>
         <textarea id="seaSmoMods" rows="2"></textarea>
         <div class="section-divider"></div> <div class="section-content">
-            <h2>Fiche GMB</h2>
+            <h2>&nbsp;Fiche GMB</h2>
             <label for="gmbLink">Lien fiche GMB à corriger :</label>
             <input id="gmbLink" type="text" value="">
 
@@ -448,12 +456,6 @@
         <div class="section-divider"></div> <div class="section-title">Modifications souhaitées côté MAJ :</div>
         <textarea id="majMods" rows="2"></textarea>
 
-        <label for="globalMods">Modifs s'appliquant à toutes les pages :</label>
-        <select id="globalMods">
-          <option value="" selected>-- Sélectionner --</option>
-          <option value="OUI">OUI</option>
-          <option value="NON">NON</option>
-        </select>
     </div>
     <div class="section-divider"></div> <div class="button-group">
         <button onclick="generateJiraTable()">Générer le Tableau Jira</button>
@@ -612,12 +614,21 @@
 
       // SEO Modifications
       output += `h3.{color:orange}@Prod SEO :{color}\n`;
-      output += `${seoMods}\n\n`;
+      if (seoMods) { // Only add if there's content
+          output += `${seoMods}\n\n`;
+      } else {
+          output += "\n"; // Add a line break for consistency
+      }
+
+
+      // Séparateur Jira avant le titre "Mots clés et Localités" (h2)
+      output += `----\n`; // Ajout d'une ligne de tirets
+      output += `h2.&nbsp;Mots clés et Localités\n`; // Le titre h2 lui-même
 
 
       // --- LP Table ---
-      output += `||*HP, LP et Booster*||*Ancien MC*||*Nouveau MC*||*Commentaires*||\n`;
-      for (let i = 0; i < lpRows.length; i++) { // Re-iterate to build output
+      let lpTableContent = '';
+      for (let i = 0; i < lpRows.length; i++) {
         const row = lpRows[i];
         const cells = row.cells;
         const hpLpBooster = cells[0].querySelector('textarea').value.trim();
@@ -626,91 +637,114 @@
         const isBoosted = cells[3].querySelector('select').value.toLowerCase() === 'true';
         const commentaires = cells[4].querySelector('textarea').value.trim();
 
-
-        const formatAncienMc = (text) => {
-            if (text) {
-                let formattedText = `{color:red}-*${text}*- ~(À supprimer)~{color}`;
-                if (isBoosted) {
-                    formattedText += ` {color:red}*^(Boostée)^*{color}`;
+        // Only add rows to the table if at least one field has content
+        if (hpLpBooster || ancienMc || nouveauMc || commentaires || isBoosted) {
+            const formatAncienMc = (text) => {
+                if (text) {
+                    let formattedText = `{color:red}-*${text}*- ~(À supprimer)~{color}`;
+                    if (isBoosted) {
+                        formattedText += ` {color:red}*^(Boostée)^*{color}`;
+                    }
+                    return formattedText;
                 }
-                return formattedText;
-            }
-            return text;
-        };
+                return ''; // Return empty string if no text
+            };
 
-        const formatNouveauMc = (text) => {
-            if (text) {
-                let formattedText = `{color:green}*${text}* ~(À remplacer)~{color}`;
-                if (isBoosted) {
-                    formattedText += ` {color:red}*^(Boostée)^*{color}`;
+            const formatNouveauMc = (text) => {
+                if (text) {
+                    let formattedText = `{color:green}*${text}* ~(À remplacer)~{color}`;
+                    if (isBoosted) {
+                        formattedText += ` {color:red}*^(Boostée)^*{color}`;
+                    }
+                    return formattedText;
                 }
-                return formattedText;
-            }
-            return text;
-        };
-
-        output += `||*${hpLpBooster}*|${formatAncienMc(ancienMc)}|${formatNouveauMc(nouveauMc)}|${commentaires}|\n`;
+                return ''; // Return empty string if no text
+            };
+            lpTableContent += `||*${hpLpBooster}*|${formatAncienMc(ancienMc)}|${formatNouveauMc(nouveauMc)}|${commentaires}||\n`;
+        }
       }
-      output += `\n`;
+
+      if (lpTableContent) { // Only add table header if there is content
+          output += `||*HP, LP et Booster*||*Ancien MC*||*Nouveau MC*||*Commentaires*||\n`;
+          output += lpTableContent;
+          output += `\n`;
+      }
 
       // --- Localités Principales Table ---
-      output += `||*Localités*||*Ancienne*||*Nouvelle*||\n`;
-      for (let i = 0; i < localesRows.length; i++) { // Re-iterate to build output
+      let localesTableContent = '';
+      for (let i = 0; i < localesRows.length; i++) {
         const row = localesRows[i];
         const cells = row.cells;
         const typeLocalite = cells[0].querySelector('textarea').value.trim();
         let ancienLoc = cells[1].querySelector('textarea').value.trim();
         let nouveauLoc = cells[2].querySelector('textarea').value.trim();
 
-        const formatAncienLoc = (text) => {
-            if (text) {
-                return `{color:red}-*${text}*- ~(À supprimer)~{color}`;
-            }
-            return text;
-        };
+        // Only add rows to the table if at least one field has content
+        if (typeLocalite || ancienLoc || nouveauLoc) {
+            const formatAncienLoc = (text) => {
+                return text ? `{color:red}-*${text}*- ~(À supprimer)~{color}` : '';
+            };
 
-        const formatNouveauLoc = (text) => {
-            if (text) {
-                return `{color:green}*${text}* ~(À remplacer)~{color}`;
-            }
-            return text;
-        };
-
-        output += `||*${typeLocalite}*|${formatAncienLoc(ancienLoc)}|${formatNouveauLoc(nouveauLoc)}|\n`;
+            const formatNouveauLoc = (text) => {
+                return text ? `{color:green}*${text}* ~(À remplacer)~{color}` : '';
+            };
+            localesTableContent += `||*${typeLocalite}*|${formatAncienLoc(ancienLoc)}|${formatNouveauLoc(nouveauLoc)}||\n`;
+        }
       }
 
-      output += `\n`;
-      output += `\n`;
+      if (localesTableContent) { // Only add table header if there is content
+          output += `||*Localités*||*Ancienne*||*Nouvelle*||\n`;
+          output += localesTableContent;
+          output += `\n`;
+      }
 
-      // SEA/SMO Modifications (Moved here)
+      // Global Mods (déplacé ici)
+      output += `||*Modifs s'appliquant à toutes les pages:*|${globalMods || ' '}||\n\n`; // Ensure space if empty
+
+
+      // Séparateur Jira avant le titre "Prod SEA-SMO" (h3)
+      output += `----\n`; // Ajout d'une ligne de tirets
+      output += `h3.{color:orange}@Prod SEA-SMO :{color}\n`;
       if (seaSmoMods) {
-          output += `h3.{color:orange}@Prod SEA-SMO :{color}\n`;
           output += `${seaSmoMods}\n\n`;
-      }
-
-      // GMB section title
-      output += `h3.{color:orange}@GMB :{color}\n`;
-      output += `\n`;
-
-      // GMB Link first, then FB/GMB Mods
-      output += `||Lien fiche GMB à corriger : |${gmbLink}|\n`;
-      output += `\n`;
-
-      output += `||*Modifs FB/GMB à faire :*|${fbGmbMods}|\n`;
-      output += `\n`;
-
-      // MAJ Modifications
-      if (majMods) {
-          output += `h3.{color:orange}@Prod MAJ :{color}\n`;
-          output += `${majMods}\n\n`;
-      }
-
-      // Global Mods
-      if (globalMods) {
-        output += `||*Modifs s'appliquant à toutes les pages:*|${globalMods}|\n\n`;
       } else {
-        output += `||*Modifs s'appliquant à toutes les pages:*||\n\n`;
+          output += "\n";
       }
+
+
+      // Séparateur Jira avant le titre "GMB" (h3)
+      if (gmbLink || fbGmbMods) { // Seulement si la section GMB a du contenu
+          output += `----\n`; // Ajout d'une ligne de tirets
+          output += `h3.{color:orange}@GMB :{color}\n`;
+          output += `\n`;
+          output += `||Lien fiche GMB à corriger : |${gmbLink || ' '}||\n`; // Ensure space if empty
+          output += `\n`;
+          output += `||*Modifs FB/GMB à faire :*|${fbGmbMods || ' '}||\n`; // Ensure space if empty
+          output += `\n`;
+      }
+
+
+      // Séparateur Jira avant le titre "Prod MAJ" (h3)
+      output += `----\n`; // Ajout d'une ligne de tirets
+      output += `h3.{color:orange}@Prod MAJ :{color}\n`; // Always display MAJ header
+      if (majMods) {
+          // Splitting by newline to add list formatting if needed
+          const majModsLines = majMods.split('\n').filter(line => line.trim() !== '');
+          if (majModsLines.length > 0) {
+              output += `\n`; // Add a line break before the list
+              majModsLines.forEach(line => {
+                  output += `* ${line.trim()}\n`; // Jira list item format
+              });
+              output += `\n`;
+          } else {
+              output += `\n`; // Empty line if no MAJ mods
+          }
+      } else {
+          output += `\n`; // Empty line if no MAJ mods
+      }
+
+      // Clean up multiple empty lines
+      output = output.replace(/\n{3,}/g, '\n\n');
 
 
       document.getElementById('jiraOutput').textContent = output;
