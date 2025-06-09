@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Générateur de Tableau Jira Avancé</title>
+  <style>
+    /* General Body Styling */
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; /* Modern sans-serif font */
+      padding: 20px;
+      background-color: #f8f9fa; /* Light grey background */
+      color: #343a40; /* Dark grey text */
+      line-height: 1.6;
+    }
+
+    /* Container for fixed width and centering */
+    .container {
+      max-width: 1400px; /* Increased max width for the content area to give more space to tables */
+      margin: 20px auto; /* Center horizontally with some top/bottom margin */
+      background-color: #ffffff; /* White background for the content box */
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* More prominent shadow for the container */
+      text-align: left; /* Ensure content inside aligns left by default */
+    }
+
+    /* Headings */
+    h1, h2, h3 {
+      color: #0056b3; /* Darker blue for headings */
+      margin-top: 25px;
+      margin-bottom: 15px;
+      text-align: left; /* Explicitly align headings to the left */
+    }
+
+    h1 {
+      text-align: center; /* Keep main title centered */
+      color: #007bff; /* Main brand blue for primary title */
+      font-size: 2.2em;
+      border-bottom: 2px solid #e9ecef;
+      padding-bottom: 10px;
+    }
+
+    h2 {
+      border-bottom: 1px solid #e9ecef;
+      padding-bottom: 8px;
+    }
+
+    .section-title, .sub-section-title {
+      font-weight: bold;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: #0056b3; /* Dark blue for section titles */
+      text-align: left; /* Ensure section titles are aligned left */
+      width: 100%; /* Make them take full width if desired */
+    }
+
+    .sub-section-title {
+      font-size: 1.1em;
+      color: #007bff; /* Brighter blue for sub-sections */
+    }
+
+    /* Form Elements - Primary */
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 5px;
+      color: #495057;
+      width: 100%; /* Ensure label takes full width */
+    }
+
+    textarea, input[type="text"], select {
+      width: 100%; /* Take full width of parent container */
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ced4da; /* Light grey border */
+      border-radius: 5px; /* Slightly rounded corners */
+      box-sizing: border-box; /* Include padding and border in the element's total width and height */
+      font-size: 1em;
+      color: #495057;
+      background-color: #fff;
+      display: block; /* Ensure each element is on its own line */
+    }
+
+    textarea:focus, input[type="text"]:focus, select:focus {
+      border-color: #007bff; /* Blue border on focus */
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); /* Subtle blue shadow on focus */
+      outline: none; /* Remove default outline */
+    }
+
+    /* Specific styling for inputs/selects/textareas inside table cells */
+    table input[type="text"], table select, table textarea {
+      width: 100%; /* Make them fill the cell width */
+      box-sizing: border-box; /* Ensure padding/border are included in width */
+      padding: 8px; /* Slightly less padding for table inputs */
+      margin: 0; /* Remove default margin */
+      min-height: 38px; /* Minimum height for inputs and textareas in table */
+      line-height: 22px; /* Adjust line-height for vertical centering */
+      resize: vertical; /* Allow vertical resizing for textareas */
+    }
+
+    /* Override height for textareas to be auto-adjustable */
+    table textarea {
+      height: auto; /* Allow height to adjust */
+      overflow-y: hidden; /* Hide scrollbar initially, will appear if content is too long for auto-adjust */
+    }
+
+
+    /* Make table cells themselves slightly taller */
+    table td {
+        vertical-align: middle; /* Vertically align content in the middle */
+        padding-top: 12px; /* Increase padding for more height */
+        padding-bottom: 12px;
+    }
+
+
+    /* Buttons */
+    button {
+      background-color: #007bff; /* Solid vibrant blue (default) */
+      color: white; /* White text */
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px; /* More rounded corners */
+      cursor: pointer;
+      margin-top: 20px;
+      margin-right: 10px; /* Spacing between buttons */
+      font-size: 1em;
+      font-weight: 600; /* Slightly bolder font */
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+      transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; /* Smooth transitions */
+      display: inline-block; /* Allows them to sit next to each other */
+    }
+
+    /* Styles for the button group to keep buttons aligned left */
+    .button-group {
+        text-align: left; /* Align the buttons to the left */
+        margin-top: 20px;
+    }
+
+    .button-group button {
+        margin-right: 10px; /* Space between buttons */
+        margin-top: 0; /* Override previous margin-top */
+    }
+
+    /* Style for buttons inside table cells */
+    table button {
+        display: block; /* Make the button a block element to allow margin auto */
+        margin: 0 auto; /* Center the button horizontally within its cell */
+        padding: 5px 10px; /* Smaller padding for table buttons */
+        font-size: 0.9em; /* Smaller font size for table buttons */
+        margin-top: 5px; /* Add a small top margin for spacing */
+        min-width: 80px; /* Ensure a minimum width for the button */
+        white-space: nowrap; /* Prevent text from wrapping inside the button */
+    }
+
+    /* Specific style for the copy button when it appears */
+    button#copyButton {
+        display: none; /* Hidden by default */
+        background-color: #FF5537; /* Orange-red color */
+    }
+
+    button#copyButton:hover {
+        background-color: #e64426; /* Slightly darker orange-red on hover */
+    }
+    button#copyButton:active {
+        background-color: #cc3a1f; /* Even darker on active */
+    }
+
+    /* Style for Reset button - now red */
+    button#resetButton {
+        background-color: #dc3545; /* Red color */
+    }
+
+    button#resetButton:hover {
+        background-color: #c82333; /* Darker red on hover */
+    }
+    button#resetButton:active {
+        background-color: #bd2130; /* Even darker on active */
+    }
+
+
+    button:hover {
+      background-color: #0056b3; /* Darker blue on hover */
+      transform: translateY(-2px); /* Lift effect on hover */
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Larger shadow on hover */
+    }
+
+    button:active {
+      background-color: #003d80; /* Even darker blue when clicked */
+      transform: translateY(0); /* Reset lift effect when clicked */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Smaller shadow when clicked */
+    }
+
+    /* Table Styling */
+    table {
+      width: 100%; /* Table takes full width of its container */
+      border-collapse: collapse;
+      margin-top: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Light shadow for tables */
+      background-color: #fff; /* White background for tables */
+    }
+
+    th, td {
+      border: 1px solid #e9ecef; /* Lighter border for cells */
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #e9ecef; /* Very light grey background for headers */
+      color: #495057; /* Darker text for headers */
+      font-weight: bold;
+    }
+
+    /* Specific column widths for tables */
+    #lpMappingTable th:nth-child(1), #lpMappingTable td:nth-child(1) { /* HP, LP et Booster */
+        width: 15%; /* Keep the width similar for now */
+    }
+    #lpMappingTable th:nth-child(2), #lpMappingTable td:nth-child(2) { /* Ancien MC */
+        width: 20%;
+    }
+    #lpMappingTable th:nth-child(3), #lpMappingTable td:nth-child(3) { /* Nouveau MC */
+        width: 20%;
+    }
+    #lpMappingTable th:nth-child(4), #lpMappingTable td:nth-child(4) { /* Boostée */
+        width: 10%;
+        text-align: center; /* Center content in Boostée column */
+    }
+    #lpMappingTable th:nth-child(5), #lpMappingTable td:nth-child(5) { /* Commentaires (formerly Modifs) */
+        width: 20%;
+    }
+    #lpMappingTable th:nth-child(6), #lpMappingTable td:nth-child(6) { /* Actions */
+        width: 15%;
+        text-align: center;
+    }
+
+    #localesMappingTable th:nth-child(1), #localesMappingTable td:nth-child(1) { /* Localités */
+        width: 25%;
+    }
+    #localesMappingTable th:nth-child(2), #localesMappingTable td:nth-child(2) { /* Ancienne */
+        width: 30%;
+    }
+    #localesMappingTable th:nth-child(3), #localesMappingTable td:nth-child(3) { /* Nouvelle */
+        width: 30%;
+    }
+    #localesMappingTable th:nth-child(4), #localesMappingTable td:nth-child(4) { /* Actions */
+        width: 15%;
+        text-align: center;
+    }
+
+
+    /* Section Separator */
+    .section-divider {
+      margin-bottom: 30px; /* Space below the section */
+      padding-bottom: 20px; /* Padding above the line */
+      border-bottom: 1px solid #e9ecef; /* Light grey line */
+    }
+
+    /* Jira Output Area */
+    #jiraOutput {
+      white-space: pre-wrap;
+      background: #e9ecef; /* Light grey background for output */
+      padding: 15px;
+      margin-top: 30px;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      font-family: 'Consolas', 'Courier New', monospace; /* Monospace font for code-like output */
+      color: #343a40;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Inner shadow for a "recessed" look */
+      width: 100%; /* Take full width */
+    }
+
+    /* Tooltip/Title attribute for full text visibility on hover */
+    input[type="text"][title], textarea[title] {
+        overflow: hidden; /* Hide overflow */
+        text-overflow: ellipsis; /* Add ellipsis for clipped text */
+    }
+
+    /* --- Custom Alert Popup Styling --- */
+    .custom-alert-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000; /* Ensure it's on top of everything */
+      visibility: hidden; /* Hidden by default */
+      opacity: 0;
+      transition: visibility 0s, opacity 0.3s ease; /* Smooth fade-in/out */
+    }
+
+    .custom-alert-overlay.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .custom-alert-box {
+      background-color: #ffffff; /* White background, similar to .container */
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Slightly stronger shadow for pop-up */
+      text-align: center;
+      max-width: 400px; /* Max width for the alert box */
+      width: 90%; /* Responsive width */
+      border: 1px solid #ced4da; /* Border similar to inputs */
+      transform: translateY(-20px); /* Slight lift effect when appearing */
+      transition: transform 0.3s ease;
+    }
+
+    .custom-alert-overlay.show .custom-alert-box {
+      transform: translateY(0); /* Return to original position */
+    }
+
+    .custom-alert-box h3 {
+      color: #007bff; /* Blue heading */
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 1.5em;
+    }
+
+    .custom-alert-box p {
+      color: #343a40; /* Dark text for message */
+      margin-bottom: 25px;
+      font-size: 1.1em;
+    }
+
+    .custom-alert-box button {
+      background-color: #007bff; /* Blue button, same as primary buttons */
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: 600;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.2s ease, box-shadow 0.2s ease;
+      margin-top: 0; /* Override default button margin-top */
+      margin-right: 0; /* Override default button margin-right */
+    }
+
+    .custom-alert-box button:hover {
+      background-color: #0056b3;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Générateur de Tableau Jira Avancé</h1>
+
+    <div class="section-content">
+        <label for="mailSubject">Sujet du mail :</label>
+        <input id="mailSubject" type="text" value="">
+
+        <label for="processType">Type de Process :</label>
+        <select id="processType">
+          <option value="" selected>-- Sélectionner --</option>
+          <option value="[[Modifs_suite_présentation]]">[[Modifs_suite_présentation]]</option>
+          <option value="[[Process_Modif]]">[[Process_Modif]]</option>
+        </select>
+
+        <label for="enseigne">Enseigne du site :</label>
+        <input id="enseigne" type="text" value="">
+
+        <label for="urlType">Type d'URL :</label>
+        <select id="urlType">
+          <option value="" selected>-- Sélectionner --</option>
+          <option value="validation">validation</option>
+          <option value="www">www</option>
+        </select>
+
+        <label for="link">URL du site :</label>
+        <input id="link" type="text" value="">
+    </div>
+    <div class="section-divider"></div> <div class="section-content">
+        <div class="section-title">Modifications souhaitées côté prod SEO :</div>
+        <textarea id="seoMods" rows="6"></textarea>
+
+        <div class="section-divider"></div> <div class="section-content">
+            <h2>Mots clés et Localités</h2>
+
+            <div class="sub-section-title">HP(Home Page) / LP (Landing Pages)</div>
+            <table id="lpMappingTable">
+              <thead>
+                <tr>
+                  <th class="lp-column-header">HP, LP et Booster</th>
+                  <th>Ancien MC</th>
+                  <th>Nouveau MC</th>
+                  <th>Boostée</th>
+                  <th>Commentaires</th>
+                  <th>Actions</th>
+                </tr>
+    </thead>
+              <tbody>
+                <tr>
+                  <td><textarea rows="1"></textarea></td>
+                  <td><textarea rows="1"></textarea></td>
+                  <td><textarea rows="1"></textarea></td>
+                  <td>
+                    <select>
+                      <option value="false" selected>Non</option>
+                      <option value="true">Oui</option>
+                    </select>
+                  </td>
+                  <td><textarea rows="1"></textarea></td>
+                  <td><button onclick="deleteRow(this)">Supprimer</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <button onclick="addRow('lpMappingTable')">Ajouter ligne HP/LP</button>
+
+            <div class="sub-section-title">Localités Principales</div>
+            <table id="localesMappingTable">
+              <thead>
+                <tr>
+                  <th>Localités (Loc1, Loc2, Loc3,...)</th> <th>Ancienne</th>
+                  <th>Nouvelle</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><textarea rows="1"></textarea></td>
+                  <td><textarea rows="1"></textarea></td>
+                  <td><textarea rows="1"></textarea></td>
+                  <td><button onclick="deleteRow(this)">Supprimer</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <button onclick="addRow('localesMappingTable')">Ajouter ligne Localité</button>
+        </div>
+        <div class="section-divider"></div> <div class="section-title">Modifications souhaitées côté SEA/SMO :</div>
+        <textarea id="seaSmoMods" rows="2"></textarea>
+        <div class="section-divider"></div> <div class="section-content">
+            <h2>Fiche GMB</h2>
+            <label for="gmbLink">Lien fiche GMB à corriger :</label>
+            <input id="gmbLink" type="text" value="">
+
+            <label for="fbGmbMods">Modifs FB/GMB à faire :</label>
+            <textarea id="fbGmbMods" rows="2"></textarea>
+        </div>
+        <div class="section-divider"></div> <div class="section-title">Modifications souhaitées côté MAJ :</div>
+        <textarea id="majMods" rows="2"></textarea>
+
+        <label for="globalMods">Modifs s'appliquant à toutes les pages :</label>
+        <select id="globalMods">
+          <option value="" selected>-- Sélectionner --</option>
+          <option value="OUI">OUI</option>
+          <option value="NON">NON</option>
+        </select>
+    </div>
+    <div class="section-divider"></div> <div class="button-group">
+        <button onclick="generateJiraTable()">Générer le Tableau Jira</button>
+        <button id="copyButton" onclick="copyToClipboard()">Copier dans le presse-papiers</button>
+        <button id="resetButton" onclick="resetForm()">Réinitialiser</button>
+    </div>
+
+    <h2>Tableau Jira</h2>
+    <div id="jiraOutput"></div>
+  </div> <div id="customAlertOverlay" class="custom-alert-overlay">
+    <div class="custom-alert-box">
+      <h3 id="customAlertTitle">Message</h3>
+      <p id="customAlertMessage"></p>
+      <button onclick="hideAlert()">OK</button>
+    </div>
+  </div>
+
+  <script>
+    // Function to auto-resize textarea height
+    function autoResizeTextarea(textarea) {
+      textarea.style.height = 'auto'; // Reset height
+      textarea.style.height = (textarea.scrollHeight) + 'px'; // Set to scroll height
+    }
+
+    // Function to set the title attribute for inputs and textareas
+    // This allows the full text to be seen on hover if it's truncated
+    function setTitleAttributes() {
+        // Select all textareas and text inputs for title and auto-resize
+        document.querySelectorAll('textarea, input[type="text"]').forEach(element => {
+            // Only set title if it's not a button or select, and if it's not already a textarea
+            if (element.tagName !== 'SELECT' && element.type !== 'submit' && element.type !== 'button') {
+              element.setAttribute('title', element.value);
+              element.addEventListener('input', (event) => {
+                  event.target.setAttribute('title', event.target.value);
+                  if (event.target.tagName === 'TEXTAREA') {
+                      autoResizeTextarea(event.target);
+                  }
+              });
+            }
+            // Auto-resize existing textareas on load as well
+            if (element.tagName === 'TEXTAREA') {
+                autoResizeTextarea(element);
+            }
+        });
+    }
+
+    function addRow(tableId) {
+      const table = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+      const row = table.insertRow();
+      let numCells;
+
+      if (tableId === 'lpMappingTable') {
+        numCells = 5; // HP, LP et Booster, Ancien MC, Nouveau MC, Boostée, Commentaires
+      } else if (tableId === 'localesMappingTable') {
+        numCells = 3; // Localités, Ancienne, Nouvelle
+      }
+
+      for (let i = 0; i < numCells; i++) {
+        const cell = row.insertCell();
+        if (tableId === 'lpMappingTable' && i === 3) { // 'Boostée' column (select)
+            const select = document.createElement('select');
+            const optionNo = document.createElement('option');
+            optionNo.value = 'false';
+            optionNo.textContent = 'Non';
+            select.appendChild(optionNo);
+            const optionYes = document.createElement('option');
+            optionYes.value = 'true';
+            optionYes.textContent = 'Oui';
+            select.appendChild(optionYes);
+            cell.appendChild(select);
+        } else { // All other columns in tables are textareas
+            const textarea = document.createElement('textarea');
+            textarea.setAttribute('rows', '1'); // Start with 1 row
+            textarea.value = '';
+            cell.appendChild(textarea);
+            // Add event listener for auto-resize immediately
+            textarea.addEventListener('input', () => autoResizeTextarea(textarea));
+            // Set initial height for new textarea
+            autoResizeTextarea(textarea);
+        }
+      }
+      const actions = row.insertCell();
+      const btn = document.createElement('button');
+      btn.textContent = 'Supprimer';
+      btn.onclick = () => deleteRow(btn);
+      actions.appendChild(btn);
+
+      // Re-apply title attributes and auto-resize after adding a new row
+      setTitleAttributes();
+    }
+
+    function deleteRow(btn) {
+        const row = btn.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+    }
+
+    function generateJiraTable() {
+      const processType = document.getElementById('processType').value.trim();
+      const mailSubject = document.getElementById('mailSubject').value.trim();
+      const enseigne = document.getElementById('enseigne').value.trim();
+      const urlType = document.getElementById('urlType').value.trim();
+      const link = document.getElementById('link').value.trim();
+      const seoMods = document.getElementById('seoMods').value.trim();
+      const majMods = document.getElementById('majMods').value.trim();
+      const seaSmoMods = document.getElementById('seaSmoMods').value.trim();
+      const globalMods = document.getElementById('globalMods').value.trim();
+      const fbGmbMods = document.getElementById('fbGmbMods').value.trim();
+      const gmbLink = document.getElementById('gmbLink').value.trim();
+
+      // --- Validation pour les Localités Principales ---
+      const localesRows = document.getElementById('localesMappingTable').getElementsByTagName('tbody')[0].rows;
+      for (let i = 0; i < localesRows.length; i++) {
+        const row = localesRows[i]; // Get the current row
+        const cells = row.cells; // Get cells for the current row
+        const ancienLoc = cells[1].querySelector('textarea').value.trim();
+        const nouveauLoc = cells[2].querySelector('textarea').value.trim();
+
+        if (ancienLoc && nouveauLoc && ancienLoc === nouveauLoc) {
+          showAlert("Les valeurs des colonnes 'Ancienne' et 'Nouvelle' ne peuvent pas être identiques pour les Localités.", "Erreur de Saisie");
+          return; // Arrête la génération du tableau Jira
+        }
+      }
+      // --- Fin de Validation Localités ---
+
+      // --- Validation pour HP, LP et Booster (Ancien MC et Nouveau MC) ---
+      const lpRows = document.getElementById('lpMappingTable').getElementsByTagName('tbody')[0].rows;
+      for (let i = 0; i < lpRows.length; i++) {
+        const row = lpRows[i]; // Get the current row
+        const cells = row.cells; // Get cells for the current row
+        const ancienMc = cells[1].querySelector('textarea').value.trim();
+        const nouveauMc = cells[2].querySelector('textarea').value.trim();
+
+        if (ancienMc && nouveauMc && ancienMc === nouveauMc) {
+          showAlert("Les valeurs des colonnes 'Ancien MC' et 'Nouveau MC' ne peuvent pas être identiques.", "Erreur de Saisie");
+          return; // Arrête la génération du tableau Jira
+        }
+      }
+      // --- Fin de Validation HP, LP et Booster ---
+
+
+      let output = '';
+      if (processType) {
+        output += `*${processType}*\n\n`;
+      }
+
+      output += `*Sujet du mail:* {color:blue}${mailSubject}{color}\n`;
+      output += `*Enseigne du site:* {color:blue}${enseigne}{color}\n`;
+      if (urlType) {
+        output += `*Type d'URL:* {color:blue}${urlType}{color}\n`;
+      } else {
+        output += `*Type d'URL:* {color:blue}{color}\n`;
+      }
+
+      output += `*URL du site:* {color:blue}${link}{color}\n\n`;
+      output += `Veuillez procéder aux changements suivants :\n\n`;
+
+      // SEO Modifications
+      output += `h3.{color:orange}@Prod SEO :{color}\n`;
+      output += `${seoMods}\n\n`;
+
+
+      // --- LP Table ---
+      output += `||*HP, LP et Booster*||*Ancien MC*||*Nouveau MC*||*Commentaires*||\n`;
+      for (let i = 0; i < lpRows.length; i++) { // Re-iterate to build output
+        const row = lpRows[i];
+        const cells = row.cells;
+        const hpLpBooster = cells[0].querySelector('textarea').value.trim();
+        let ancienMc = cells[1].querySelector('textarea').value.trim();
+        let nouveauMc = cells[2].querySelector('textarea').value.trim();
+        const isBoosted = cells[3].querySelector('select').value.toLowerCase() === 'true';
+        const commentaires = cells[4].querySelector('textarea').value.trim();
+
+
+        const formatAncienMc = (text) => {
+            if (text) {
+                let formattedText = `{color:red}-*${text}*- ~(À supprimer)~{color}`;
+                if (isBoosted) {
+                    formattedText += ` {color:red}*^(Boostée)^*{color}`;
+                }
+                return formattedText;
+            }
+            return text;
+        };
+
+        const formatNouveauMc = (text) => {
+            if (text) {
+                let formattedText = `{color:green}*${text}* ~(À remplacer)~{color}`;
+                if (isBoosted) {
+                    formattedText += ` {color:red}*^(Boostée)^*{color}`;
+                }
+                return formattedText;
+            }
+            return text;
+        };
+
+        output += `||*${hpLpBooster}*|${formatAncienMc(ancienMc)}|${formatNouveauMc(nouveauMc)}|${commentaires}|\n`;
+      }
+      output += `\n`;
+
+      // --- Localités Principales Table ---
+      output += `||*Localités*||*Ancienne*||*Nouvelle*||\n`;
+      for (let i = 0; i < localesRows.length; i++) { // Re-iterate to build output
+        const row = localesRows[i];
+        const cells = row.cells;
+        const typeLocalite = cells[0].querySelector('textarea').value.trim();
+        let ancienLoc = cells[1].querySelector('textarea').value.trim();
+        let nouveauLoc = cells[2].querySelector('textarea').value.trim();
+
+        const formatAncienLoc = (text) => {
+            if (text) {
+                return `{color:red}-*${text}*- ~(À supprimer)~{color}`;
+            }
+            return text;
+        };
+
+        const formatNouveauLoc = (text) => {
+            if (text) {
+                return `{color:green}*${text}* ~(À remplacer)~{color}`;
+            }
+            return text;
+        };
+
+        output += `||*${typeLocalite}*|${formatAncienLoc(ancienLoc)}|${formatNouveauLoc(nouveauLoc)}|\n`;
+      }
+
+      output += `\n`;
+      output += `\n`;
+
+      // SEA/SMO Modifications (Moved here)
+      if (seaSmoMods) {
+          output += `h3.{color:orange}@Prod SEA-SMO :{color}\n`;
+          output += `${seaSmoMods}\n\n`;
+      }
+
+      // GMB section title
+      output += `h3.{color:orange}@GMB :{color}\n`;
+      output += `\n`;
+
+      // GMB Link first, then FB/GMB Mods
+      output += `||Lien fiche GMB à corriger : |${gmbLink}|\n`;
+      output += `\n`;
+
+      output += `||*Modifs FB/GMB à faire :*|${fbGmbMods}|\n`;
+      output += `\n`;
+
+      // MAJ Modifications
+      if (majMods) {
+          output += `h3.{color:orange}@Prod MAJ :{color}\n`;
+          output += `${majMods}\n\n`;
+      }
+
+      // Global Mods
+      if (globalMods) {
+        output += `||*Modifs s'appliquant à toutes les pages:*|${globalMods}|\n\n`;
+      } else {
+        output += `||*Modifs s'appliquant à toutes les pages:*||\n\n`;
+      }
+
+
+      document.getElementById('jiraOutput').textContent = output;
+
+      const copyButton = document.getElementById('copyButton');
+      copyButton.style.display = 'inline-block';
+      copyButton.style.backgroundColor = '#FF5537';
+    }
+
+    // --- Custom Alert Functions ---
+    function showAlert(message, title = "Notification") {
+      const overlay = document.getElementById('customAlertOverlay');
+      const alertTitle = document.getElementById('customAlertTitle');
+      const alertMessage = document.getElementById('customAlertMessage');
+
+      alertTitle.textContent = title;
+      alertMessage.textContent = message;
+      overlay.classList.add('show');
+    }
+
+    function hideAlert() {
+      const overlay = document.getElementById('customAlertOverlay');
+      overlay.classList.remove('show');
+    }
+
+    function copyToClipboard() {
+      const text = document.getElementById('jiraOutput').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        showAlert('Le tableau Jira a été copié dans le presse-papiers !', 'Copié !');
+      }).catch(err => {
+        console.error('Erreur de copie:', err);
+        showAlert('Échec de la copie ! Veuillez copier manuellement le contenu.', 'Erreur');
+      });
+    }
+
+    function resetForm() {
+        document.querySelectorAll('input[type="text"], textarea').forEach(element => {
+            element.value = '';
+            element.setAttribute('title', '');
+            if (element.tagName === 'TEXTAREA') {
+                autoResizeTextarea(element);
+            }
+        });
+
+        document.querySelectorAll('select').forEach(element => {
+            element.selectedIndex = 0;
+        });
+
+        document.getElementById('jiraOutput').textContent = '';
+        document.getElementById('copyButton').style.display = 'none';
+
+        const lpTableBody = document.getElementById('lpMappingTable').getElementsByTagName('tbody')[0];
+        while (lpTableBody.rows.length > 0) {
+            lpTableBody.deleteRow(0);
+        }
+        addRow('lpMappingTable');
+
+        const localesTableBody = document.getElementById('localesMappingTable').getElementsByTagName('tbody')[0];
+        while (localesTableBody.rows.length > 0) {
+            localesTableBody.deleteRow(0);
+        }
+        addRow('localesMappingTable');
+
+        setTitleAttributes();
+        showAlert('Le formulaire a été réinitialisé avec succès.', 'Réinitialisé !');
+    }
+
+    window.onload = function() {
+        const lpTableBody = document.getElementById('lpMappingTable').getElementsByTagName('tbody')[0];
+        if (lpTableBody.rows.length === 0) {
+            addRow('lpMappingTable');
+        }
+        const localesTableBody = document.getElementById('localesMappingTable').getElementsByTagName('tbody')[0];
+        if (localesTableBody.rows.length === 0) {
+            addRow('localesMappingTable');
+        }
+        setTitleAttributes();
+        document.getElementById('copyButton').style.display = 'none';
+    };
+  </script>
+</body>
+</html>
